@@ -3,11 +3,23 @@
 Scrape GIPHY browse categories and subcollections from giphy.com (no API keys).
 Writes collections.json in the same shape as before: title, id, thumbnail, collections[].
 
-Requires: pip install -r requirements.txt && playwright install chromium
+Optionally scrape up to N GIFs per subcollection (search results) into:
+  collection_gifs/{category_id}/{sub_id}.json
+
+Requires: pip install -r requirements.txt
+  Then (required once per machine / after upgrading playwright):
+  python3 -m playwright install chromium
 
 Usage:
   python3 scripts/scrape_collections.py
   python3 scripts/scrape_collections.py --output /path/to/collections.json
+
+  # GIFs only (uses existing collections.json)
+  python3 scripts/scrape_collections.py --collection-gifs
+  python3 scripts/scrape_collections.py --collection-gifs --max-gifs 500 --gifs-dir collection_gifs
+
+  # Metadata + GIFs in one run
+  python3 scripts/scrape_collections.py --all
 """
 
 from __future__ import annotations
@@ -22,6 +34,8 @@ from urllib.parse import unquote, urlparse
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.join(SCRIPT_DIR, "..")
 COLLECTIONS_FILE = "collections.json"
+DEFAULT_GIFS_DIR = "collection_gifs"
+DEFAULT_MAX_GIFS = 500
 
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -35,6 +49,27 @@ except ImportError:
     sys.exit(1)
 
 
+def launch_chromium(p, headless: bool = True):
+    """
+    Launch Chromium. If browser binaries are missing (common after pip upgrade), print fix and exit.
+    """
+    try:
+        return p.chromium.launch(headless=headless)
+    except Exception as e:
+        err = str(e).lower()
+        if "executable doesn't exist" in err or "browserType.launch" in err:
+            print(
+                "Playwright browser binaries are missing or do not match this Playwright version.\n"
+                "Run this with the same Python you use for this script, then retry:\n\n"
+                "  python3 -m playwright install chromium\n\n"
+                "Or install all browsers:\n\n"
+                "  python3 -m playwright install\n",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        raise
+
+
 def media_url_to_i_giphy_webp(url: str) -> str:
     """Normalize Giphy media URLs to i.giphy.com/{id}.webp when possible."""
     if not url or "giphy.com" not in url:
@@ -43,6 +78,27 @@ def media_url_to_i_giphy_webp(url: str) -> str:
     if m:
         return f"https://i.giphy.com/{m.group(1)}.webp"
     return url
+
+
+def media_id_and_type_from_giphy_url(href: str) -> tuple[str | None, str]:
+    """
+    Parse Giphy /gifs/... or /stickers/... URL tail; return (id, 'gif'|'sticker').
+    IDs are the trailing segment after the last hyphen when the path has hyphens; else full tail.
+    """
+    path = urlparse(href).path.rstrip("/")
+    for prefix, kind in (("/gifs/", "gif"), ("/stickers/", "sticker")):
+        if prefix not in path:
+            continue
+        tail = path.split(prefix, 1)[-1]
+        if not tail or "/" in tail:
+            return None, ""
+        if "-" in tail:
+            gid = tail.rsplit("-", 1)[-1]
+        else:
+            gid = tail
+        if len(gid) >= 8 and re.match(r"^[a-zA-Z0-9]+$", gid):
+            return gid, kind
+    return None, ""
 
 
 def parse_search_slug(href: str) -> str | None:
@@ -155,11 +211,132 @@ def scrape_category_page(page, slug: str) -> tuple[str, str, list[dict]]:
     return title, cat_thumb, subcollections
 
 
+def scrape_search_gifs_for_slug(
+    page,
+    search_slug: str,
+    max_gifs: int,
+    scroll_pause_ms: int = 1200,
+    max_stall_rounds: int = 25,
+) -> list[dict]:
+    """
+    Load giphy.com/search/{search_slug}, scroll to load results, collect up to max_gifs items.
+    Each item: { "id", "title", "type" } matching emoji/trending JSON style.
+    """
+    url = f"https://giphy.com/search/{search_slug}"
+    page.goto(url, wait_until="domcontentloaded", timeout=120000)
+    page.wait_for_timeout(2000)
+
+    ordered: list[dict] = []
+    seen: set[str] = set()
+    stall = 0
+    last_total = 0
+
+    selectors = 'a[href*="/gifs/"], a[href*="/stickers/"]'
+
+    while len(ordered) < max_gifs and stall < max_stall_rounds:
+        for link in page.locator(selectors).all():
+            if len(ordered) >= max_gifs:
+                break
+            href = link.get_attribute("href") or ""
+            gid, kind = media_id_and_type_from_giphy_url(href)
+            if not gid or gid in seen:
+                continue
+            title = (link.get_attribute("aria-label") or link.get_attribute("title") or "").strip()
+            if not title:
+                try:
+                    img = link.locator("img").first
+                    if img.count():
+                        title = (img.get_attribute("alt") or "").strip()
+                except Exception:
+                    pass
+            if not title:
+                try:
+                    title = (link.inner_text() or "").strip()
+                except Exception:
+                    title = ""
+            seen.add(gid)
+            ordered.append({"id": gid, "title": title[:500] if title else "", "type": kind})
+
+        if len(ordered) == last_total:
+            stall += 1
+        else:
+            stall = 0
+        last_total = len(ordered)
+
+        if len(ordered) >= max_gifs:
+            break
+
+        page.evaluate("window.scrollBy(0, Math.floor(window.innerHeight * 1.5))")
+        page.wait_for_timeout(scroll_pause_ms)
+
+    return ordered[:max_gifs]
+
+
+def run_collection_gifs_scraper(
+    collections_path: str,
+    gifs_dir: str,
+    max_gifs: int,
+    headless: bool = True,
+    limit_subcollections: int | None = None,
+) -> None:
+    """Read collections.json and write one JSON file per subcollection under gifs_dir/{category_id}/."""
+    if not os.path.isfile(collections_path):
+        raise FileNotFoundError(collections_path)
+
+    with open(collections_path, encoding="utf-8") as f:
+        tree = json.load(f)
+
+    os.makedirs(gifs_dir, exist_ok=True)
+
+    tasks: list[tuple[str, str]] = []
+    for cat in tree:
+        cat_id = cat.get("id") or ""
+        if not cat_id:
+            continue
+        for sub in cat.get("collections", []):
+            sid = sub.get("id") or ""
+            if sid:
+                tasks.append((cat_id, sid))
+
+    if limit_subcollections is not None:
+        tasks = tasks[: max(0, limit_subcollections)]
+
+    total = len(tasks)
+    print(f"Scraping up to {max_gifs} GIFs per subcollection ({total} files) …")
+
+    with sync_playwright() as p:
+        browser = launch_chromium(p, headless=headless)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 900},
+        )
+        page = context.new_page()
+
+        for i, (cat_id, sub_id) in enumerate(tasks, 1):
+            sub_dir = os.path.join(gifs_dir, cat_id)
+            os.makedirs(sub_dir, exist_ok=True)
+            out_path = os.path.join(sub_dir, f"{sub_id}.json")
+
+            print(f"  [{i}/{total}] {cat_id}/{sub_id}.json")
+            try:
+                gifs = scrape_search_gifs_for_slug(page, sub_id, max_gifs=max_gifs)
+            except Exception as e:
+                print(f"    Warning: {e}", file=sys.stderr)
+                gifs = []
+
+            with open(out_path, "w", encoding="utf-8") as f:
+                json.dump(gifs, f, indent=2, ensure_ascii=False)
+
+        browser.close()
+
+    print(f"Done! Wrote GIF lists under {os.path.abspath(gifs_dir)}")
+
+
 def run_scraper(output_path: str, headless: bool = True) -> None:
     out: list[dict] = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=headless)
+        browser = launch_chromium(p, headless=headless)
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             viewport={"width": 1280, "height": 900},
@@ -201,7 +378,40 @@ def main():
         "-o",
         "--output",
         default=os.path.join(PROJECT_ROOT, COLLECTIONS_FILE),
-        help="Output JSON path",
+        help="Output JSON path for collections metadata",
+    )
+    parser.add_argument(
+        "--collections-json",
+        default=None,
+        help="collections.json to use for --collection-gifs (default: same as -o)",
+    )
+    parser.add_argument(
+        "--collection-gifs",
+        action="store_true",
+        help="Scrape GIF lists for every subcollection (requires collections.json)",
+    )
+    parser.add_argument(
+        "--gifs-dir",
+        default=os.path.join(PROJECT_ROOT, DEFAULT_GIFS_DIR),
+        help=f"Directory for per-subcollection JSON (default: {DEFAULT_GIFS_DIR}/)",
+    )
+    parser.add_argument(
+        "--max-gifs",
+        type=int,
+        default=DEFAULT_MAX_GIFS,
+        help=f"Max GIFs per subcollection (default: {DEFAULT_MAX_GIFS})",
+    )
+    parser.add_argument(
+        "--limit-subcollections",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Only process first N subcollections (debug / smoke test)",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run metadata scrape first, then --collection-gifs",
     )
     parser.add_argument(
         "--headed",
@@ -209,8 +419,33 @@ def main():
         help="Run browser with UI (debugging)",
     )
     args = parser.parse_args()
-    output_path = os.path.abspath(args.output)
-    run_scraper(output_path, headless=not args.headed)
+    headless = not args.headed
+    collections_path = os.path.abspath(args.collections_json or args.output)
+
+    try:
+        if args.all:
+            run_scraper(os.path.abspath(args.output), headless=headless)
+            print()
+            run_collection_gifs_scraper(
+                collections_path=os.path.abspath(args.output),
+                gifs_dir=os.path.abspath(args.gifs_dir),
+                max_gifs=args.max_gifs,
+                headless=headless,
+                limit_subcollections=args.limit_subcollections,
+            )
+        elif args.collection_gifs:
+            run_collection_gifs_scraper(
+                collections_path=collections_path,
+                gifs_dir=os.path.abspath(args.gifs_dir),
+                max_gifs=args.max_gifs,
+                headless=headless,
+                limit_subcollections=args.limit_subcollections,
+            )
+        else:
+            run_scraper(os.path.abspath(args.output), headless=headless)
+    except (FileNotFoundError, OSError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

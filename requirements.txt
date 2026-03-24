@@ -1,1 +1,2 @@
+# After pip install: python3 -m playwright install chromium
 playwright>=1.40.0

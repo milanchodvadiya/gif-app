@@ -2,7 +2,7 @@
   {
     "title": "Actions",
     "id": "actions",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/TydZAW0DVCbGE.webp",
     "collections": [
       {
         "title": "BREAKING UP",
@@ -134,7 +134,7 @@
   {
     "title": "Adjectives",
     "id": "adjectives",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/gEG1j8eBvHVYs.webp",
     "collections": [
       {
         "title": "BLACK AND WHITE",
@@ -221,7 +221,7 @@
   {
     "title": "Animals",
     "id": "animals",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/uUs14eCA2SBgs.webp",
     "collections": [
       {
         "title": "BEAR",
@@ -353,7 +353,7 @@
   {
     "title": "Anime",
     "id": "anime",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/L8A2CLpJJW5d3NR5Tt.webp",
     "collections": [
       {
         "title": "BERSERK",
@@ -485,7 +485,7 @@
   {
     "title": "Art-Design",
     "id": "art-design",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/4GWgNkOcQeubVjoc5P.webp",
     "collections": [
       {
         "title": "3D",
@@ -597,7 +597,7 @@
   {
     "title": "Cartoons-Comics",
     "id": "cartoons-comics",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/D4mFxzEEGguAM.webp",
     "collections": [
       {
         "title": "101 DALMATIANS",
@@ -729,7 +729,7 @@
   {
     "title": "Celebrities",
     "id": "celebrities",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/vaYEx6ucpBghW.webp",
     "collections": [
       {
         "title": "ADAM BALDWIN",
@@ -861,7 +861,7 @@
   {
     "title": "Decades",
     "id": "decades",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/i2KEdkFO2niABWu7vG.webp",
     "collections": [
       {
         "title": "20S",
@@ -913,7 +913,7 @@
   {
     "title": "Emotions",
     "id": "emotions",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/3o9bJX4O9ShW1L32eY.webp",
     "collections": [
       {
         "title": "ANGRY",
@@ -1045,7 +1045,7 @@
   {
     "title": "Fashion-Beauty",
     "id": "fashion-beauty",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/wu3xZIeucDVII.webp",
     "collections": [
       {
         "title": "ALEXANDER MCQUEEN",
@@ -1177,7 +1177,7 @@
   {
     "title": "Food-Drink",
     "id": "food-drink",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/bfrlODgSLqXxS.webp",
     "collections": [
       {
         "title": "APPLE",
@@ -1302,9 +1302,9 @@
     ]
   },
   {
-    "title": "Your Privacy",
+    "title": "Gaming",
     "id": "gaming",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/cPZdap8PGhSvABr6xW.webp",
     "collections": [
       {
         "title": "8BIT",
@@ -1436,7 +1436,7 @@
   {
     "title": "Greetings",
     "id": "greetings",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/kFIfiwvzJjbUsNbIg5.webp",
     "collections": [
       {
         "title": "BEST FRIENDS",
@@ -1508,7 +1508,7 @@
   {
     "title": "Holiday",
     "id": "holiday",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/l4FGCdurj53YWZYYg.webp",
     "collections": [
       {
         "title": "CINCO DE MAYO",
@@ -1580,7 +1580,7 @@
   {
     "title": "Identity",
     "id": "identity",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/NCjISbEPFxm48.webp",
     "collections": [
       {
         "title": "ASIAN",
@@ -1591,16 +1591,6 @@
         "title": "BISEXUAL",
         "id": "bisexual",
         "thumbnail": "https://i.giphy.com/RvQlM0571juI8.webp"
-      },
-      {
-        "title": "GAY",
-        "id": "gay",
-        "thumbnail": "https://i.giphy.com/3o72FiXBdWRy3aZHJm.webp"
-      },
-      {
-        "title": "LESBIAN",
-        "id": "lesbian",
-        "thumbnail": "https://i.giphy.com/UtWDvlbhGx8FvyrJzX.webp"
       },
       {
         "title": "LOVE IS LOVE",
@@ -1637,7 +1627,7 @@
   {
     "title": "Interests",
     "id": "interests",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/26uf8yw8j3IC7XZjq.webp",
     "collections": [
       {
         "title": "ALIEN",
@@ -1769,7 +1759,7 @@
   {
     "title": "Memes",
     "id": "memes",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/WoF3yfYupTt8mHc7va.webp",
     "collections": [
       {
         "title": "ARTHUR",
@@ -1851,7 +1841,7 @@
   {
     "title": "Movies",
     "id": "movies",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/6qvoDc62nHggNsa0WB.webp",
     "collections": [
       {
         "title": "500 DAYS OF SUMMER",
@@ -1983,7 +1973,7 @@
   {
     "title": "Music",
     "id": "music",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/H1zM6t7Zqi1hK.webp",
     "collections": [
       {
         "title": "ACTION BRONSON",
@@ -2115,7 +2105,7 @@
   {
     "title": "Nature",
     "id": "nature",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/3o85xJWqnjH1Xu5rmE.webp",
     "collections": [
       {
         "title": "BEACH",
@@ -2247,7 +2237,7 @@
   {
     "title": "News-Politics",
     "id": "news-politics",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/LSQtUxNHaupcd0a9d8.webp",
     "collections": [
       {
         "title": "BERNIE SANDERS",
@@ -2369,7 +2359,7 @@
   {
     "title": "Reactions",
     "id": "reactions",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/sRKg9r2YWeCTG5JTTo.webp",
     "collections": [
       {
         "title": "ABANDON THREAD",
@@ -2501,7 +2491,7 @@
   {
     "title": "Science",
     "id": "science",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/12T8ZntJRvb212.webp",
     "collections": [
       {
         "title": "ASTEROIDS",
@@ -2633,7 +2623,7 @@
   {
     "title": "Sports",
     "id": "sports",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/4dL4eV4pNb3MY.webp",
     "collections": [
       {
         "title": "BOXING",
@@ -2765,7 +2755,7 @@
   {
     "title": "Stickers",
     "id": "stickers",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/IULURGT7SMhoI.webp",
     "collections": [
       {
         "title": "ANIMATEDTEXT STICKERS",
@@ -2832,7 +2822,7 @@
   {
     "title": "Transportation",
     "id": "transportation",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/Btn42lfKKrOzS.webp",
     "collections": [
       {
         "title": "AIRPLANE",
@@ -2964,7 +2954,7 @@
   {
     "title": "Tv",
     "id": "tv",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/xTiTnf9SCIVk8HIvE4.webp",
     "collections": [
       {
         "title": "AFV",
@@ -3096,7 +3086,7 @@
   {
     "title": "Weird",
     "id": "weird",
-    "thumbnail": "",
+    "thumbnail": "https://i.giphy.com/2igz2N2bac1Wg.webp",
     "collections": [
       {
         "title": "80S",
