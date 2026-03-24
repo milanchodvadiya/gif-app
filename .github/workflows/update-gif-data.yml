@@ -1,0 +1,73 @@
+# Rebuild search index weekly; full scrape (Playwright) on demand — can take hours.
+# Repo Settings → Actions → General → Workflow permissions: Read and write.
+
+name: Update GIF data
+
+on:
+  workflow_dispatch:
+    inputs:
+      index_only:
+        description: "Only rebuild search_index.json (skip Playwright scrape)"
+        type: boolean
+        default: false
+      max_gifs:
+        description: "Max GIFs per subcollection (full scrape only)"
+        type: number
+        default: 500
+  schedule:
+    # Weekly: refresh search_index.json only (fast). Full scrape is manual via workflow_dispatch.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: gif-data-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: python -m playwright install chromium --with-deps
+
+      - name: Run update pipeline
+        run: |
+          set -eux
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python scripts/update_all_data.py --index-only
+          elif [ "${{ inputs.index_only }}" = "true" ]; then
+            python scripts/update_all_data.py --index-only
+          else
+            python scripts/update_all_data.py --max-gifs ${{ inputs.max_gifs }}
+          fi
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update gif data [automated]"
+            git push
+          fi
