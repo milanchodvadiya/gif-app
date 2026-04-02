@@ -1,0 +1,12 @@
+{
+    "displayAds": true,
+    "googleAdIds": {
+        "interstitial": "ca-app-pub-3940256099942544/1033173712",
+        "nativeAdvanced": "ca-app-pub-3940256099942544/2247696110"
+    },
+    "adSettings": {
+        "gridItemCount": 20,
+        "clickCount": 3,
+        "freeDays": 3
+    }
+}
